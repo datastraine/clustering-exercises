@@ -1,7 +1,7 @@
 import pandas as pd
+import numpy as np
 import env
 import os
-
 
 def get_connection(db, user=env.user, host=env.host, password=env.password):
     '''
@@ -50,3 +50,37 @@ select * from properties_2017
         df = pd.read_sql(sql_query, get_connection(db))
         df.to_csv('zillow_full.csv', index=False)
         return df
+
+def summarize(df):
+	'''
+	Prints the basic summary statistics of a data frame
+	'''
+	print("INFO \n")
+	print(df.info)
+	print("DESCRIPTION\n")
+	print(df.describe())
+	print("SHAPE \n")
+
+def row_data(df):
+	'''
+	Takes in a data frame and returns the range of columns with missing data, 
+	what precentage of missing columns that represents,
+	and how many rows have that number of missing columns
+	'''    
+    column_data = pd.DataFrame(df.isnull().sum(axis=1).value_counts().sort_values())
+    column_data.reset_index(inplace = True)
+    column_data.columns = ['num_cols_missing', 'num_rows']
+    column_data['pct_cols_missing'] = column_data['num_cols_missing']/df.shape[1]
+    column_data = column_data.sort_values('num_cols_missing').reset_index(drop= True)
+    return column_data
+
+def columns_data(df):
+	'''
+	Takes in a data frame and returns the number of rows and percentage of rows missing per column
+	'''   
+    row_data = pd.concat([pd.Series(df.isnull().sum()), pd.Series(round(df.isnull().sum()/df.shape[0]* 100, 2))], axis=1)
+    row_data.columns=(['num_rows_missing', 'pct_rows_missing'])
+    return row_data
+
+
+
