@@ -66,21 +66,20 @@ def row_data(df):
 	Takes in a data frame and returns the range of columns with missing data, 
 	what precentage of missing columns that represents,
 	and how many rows have that number of missing columns
-	'''    
-    row_data = pd.DataFrame(df.isnull().sum(axis=1).value_counts().sort_values())
-    row_data.reset_index(inplace = True)
-    row_data.columns = ['num_cols_missing', 'num_rows']
-    row_data['pct_cols_missing'] = column_data['num_cols_missing']/df.shape[1]
-    row_data = column_data.sort_values('num_cols_missing').reset_index(drop= True)
-    return row_data
+	'''
+	row_data = pd.DataFrame(df.isnull().sum(axis=1).value_counts().sort_values())
+	row_data.reset_index(inplace = True)
+	row_data.columns = ['num_cols_missing', 'num_rows']
+	row_data['pct_cols_missing'] = column_data['num_cols_missing']/df.shape[1]
+	row_data = column_data.sort_values('num_cols_missing').reset_index(drop= True)
+	return row_data
 
 def columns_data(df):
 	'''
 	Takes in a data frame and returns the number of rows and percentage of rows missing per column
-	'''   
-    columns_data = pd.concat([pd.Series(df.isnull().sum()), pd.Series(round(df.isnull().sum()/df.shape[0]* 100, 2))], axis=1)
-    columns_data.columns=(['num_rows_missing', 'pct_rows_missing'])
-    return columns_data
-
-
+	'''
+	columns_data = pd.concat([pd.Series(df.isnull().sum()), pd.Series(df.isnull().sum()/df.shape[0])], axis=1)
+	columns_data.reset_index(inplace = True)
+	columns_data.columns=(['columns', 'num_rows_missing', 'pct_rows_missing'])
+	return columns_data
 
