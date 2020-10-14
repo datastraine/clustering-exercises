@@ -27,9 +27,8 @@ def prep_zillow():
     Loads zillow data and then fliters it where propertylandusetypeid is 261, 262, or 273.
     Drops unnecessary id columns and any duplicated columns.
     Drops rows where unit count is more than 1  
-    Creates a has_basement column where basementsqft > 0.
-    Drops columns where the percentage of missing data is 40%.
-    Drop columns where the percentage of missing data is 25%.
+    Drops columns where the percentage of missing data is 40% or more.
+    Drop columns where the percentage of missing data is 60% or more.
     Splits the data into train, validate, test sets for modelings
     Imputes missing continuous/discrete with median/mode respectively
     '''
@@ -40,22 +39,20 @@ def prep_zillow():
         'architecturalstyletypeid', 'airconditioningtypeid', 'id', 'parcelid'], inplace = True)
     df.drop(columns = [c for c in df.columns if c.endswith('.1')], inplace = True)
     df = df[df.unitcnt == 1.0]
-    df['has_basement'] = df['basementsqft'] > 0
     df.replace({True:1, False:0}, inplace = True)
     df['heatingorsystemdesc'].fillna('None', inplace=True)
-    df = handle_missing_values(df, .6, .75,)
-    df.drop(columns=['propertycountylandusecode', 'calculatedbathnbr', 
-                     'finishedsquarefeet12', 'unitcnt', 'fullbathcnt', 
-                     'regionidcity', 'censustractandblock'], inplace = True)
+    df = handle_missing_values(df, .6, .6)
+    df.drop(columns=['calculatedbathnbr', 'unitcnt', 'fullbathcnt', 'propertyzoningdesc'], inplace = True)
     
-    train_validate, test = train_test_split(df, test_size=.2, random_state=333)
-    train, validate = train_test_split(train_validate, test_size=.25, random_state=333)
+    train_validate, test = train_test_split(df, test_size=.2, random_state=369)
+    train, validate = train_test_split(train_validate, test_size=.25, random_state=369)
     
     med_cols = [
     "taxamount",
     "calculatedfinishedsquarefeet",
     "structuretaxvaluedollarcnt",
-    "lotsizesquarefeet"
+    "lotsizesquarefeet",
+    "buildingqualitytypeid"
     ]
 
     for col in med_cols:
@@ -65,16 +62,22 @@ def prep_zillow():
         test[col].fillna(median, inplace=True)
         
     mod_cols = [
-        "yearbuilt",
-        "regionidzip",
-        "propertyzoningdesc",
-        "buildingqualitytypeid",
-    ]
+    "yearbuilt",
+    "regionidzip",
+    'regionidcity']
 
     for col in mod_cols:
-        mode = str(train[col].mode())# I had some friction when this returned a float (and there were no decimals anyways)
+        mode = int(train[col].mode())# I had some friction when this returned a float (and there were no decimals anyways)
         train[col].fillna(value=mode, inplace=True)
         validate[col].fillna(value=mode, inplace=True)
         test[col].fillna(value=mode, inplace=True)
+    
+    mode = str(train['censustractandblock'].mode())
+    train['censustractandblock'].fillna(value=mode, inplace=True)
+    validate['censustractandblock'].fillna(value=mode, inplace=True)
+    test['censustractandblock'].fillna(value=mode, inplace=True)
+
 
     return train, validate, test
+
+    
